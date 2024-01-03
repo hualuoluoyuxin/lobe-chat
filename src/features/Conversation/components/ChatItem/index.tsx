@@ -13,6 +13,7 @@ import { renderErrorMessages } from '../../Error';
 import { renderMessagesExtra } from '../../Extras';
 import { renderMessages, useAvatarsClick } from '../../Messages';
 import ActionsBar from './ActionsBar';
+import HistoryDivider from './HistoryDivider';
 
 export interface ChatListItemProps {
   index: number;
@@ -32,6 +33,8 @@ const Item = memo<ChatListItemProps>(({ index }) => {
     (s) => chatSelectors.currentChatsWithGuideMessage(meta)(s)[index],
     isEqual,
   );
+
+  const historyLength = useChatStore((s) => chatSelectors.currentChats(s).length);
 
   const [loading, onMessageChange] = useChatStore((s) => [
     s.chatLoadingId === item.id,
@@ -88,38 +91,50 @@ const Item = memo<ChatListItemProps>(({ index }) => {
     return { message, ...alertConfig };
   }, [item.error]);
 
+  const enableHistoryDivider = useSessionStore((s) => {
+    const config = agentSelectors.currentAgentConfig(s);
+    return (
+      config.enableHistoryCount &&
+      historyLength > (config.historyCount ?? 0) &&
+      config.historyCount === historyLength - index + 1
+    );
+  });
+
   return (
-    <ChatItem
-      actions={<ActionsBar index={index} setEditing={setEditing} />}
-      avatar={item.meta}
-      editing={editing}
-      error={error}
-      errorMessage={<ErrorMessage data={item} />}
-      loading={loading}
-      message={item.content}
-      messageExtra={<MessageExtra data={item} />}
-      onAvatarClick={onAvatarsClick?.(item.role)}
-      onChange={(value) => onMessageChange(item.id, value)}
-      onDoubleClick={(e) => {
-        if (item.id === 'default' || item.error) return;
-        if (item.role && ['assistant', 'user'].includes(item.role) && e.altKey) {
-          setEditing(true);
-        }
-      }}
-      onEditingChange={setEditing}
-      placement={type === 'chat' ? (item.role === 'user' ? 'right' : 'left') : 'left'}
-      primary={item.role === 'user'}
-      renderMessage={(editableContent) => (
-        <RenderMessage data={item} editableContent={editableContent} />
-      )}
-      text={{
-        cancel: t('cancel'),
-        confirm: t('ok'),
-        edit: t('edit'),
-      }}
-      time={item.updatedAt || item.createdAt}
-      type={type === 'chat' ? 'block' : 'pure'}
-    />
+    <>
+      <HistoryDivider enable={enableHistoryDivider} />
+      <ChatItem
+        actions={<ActionsBar index={index} setEditing={setEditing} />}
+        avatar={item.meta}
+        editing={editing}
+        error={error}
+        errorMessage={<ErrorMessage data={item} />}
+        loading={loading}
+        message={item.content}
+        messageExtra={<MessageExtra data={item} />}
+        onAvatarClick={onAvatarsClick?.(item.role)}
+        onChange={(value) => onMessageChange(item.id, value)}
+        onDoubleClick={(e) => {
+          if (item.id === 'default' || item.error) return;
+          if (item.role && ['assistant', 'user'].includes(item.role) && e.altKey) {
+            setEditing(true);
+          }
+        }}
+        onEditingChange={setEditing}
+        placement={type === 'chat' ? (item.role === 'user' ? 'right' : 'left') : 'left'}
+        primary={item.role === 'user'}
+        renderMessage={(editableContent) => (
+          <RenderMessage data={item} editableContent={editableContent} />
+        )}
+        text={{
+          cancel: t('cancel'),
+          confirm: t('ok'),
+          edit: t('edit'),
+        }}
+        time={item.updatedAt || item.createdAt}
+        type={type === 'chat' ? 'block' : 'pure'}
+      />
+    </>
   );
 });
 
