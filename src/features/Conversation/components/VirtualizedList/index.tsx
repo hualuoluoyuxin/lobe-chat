@@ -99,12 +99,11 @@ const useStyles = createStyles(({ css }) => {
 const VirtualizedList = () => {
   const { styles } = useStyles();
   const listRef = useRef<List>(null);
-  const containerRef = useRef(null);
 
   const dataLength = useChatStore((s) => chatSelectors.currentChatIDsWithGuideMessage(s).length);
 
   return (
-    <Flexbox className={styles.container} ref={containerRef}>
+    <Flexbox className={styles.container}>
       <AutoSizer>
         {({ width, height }) => (
           <WindowScroller>
@@ -120,6 +119,7 @@ const VirtualizedList = () => {
                 rowCount={dataLength + 1}
                 rowHeight={cache.rowHeight}
                 rowRenderer={rowRenderer}
+                scrollToAlignment={'end'}
                 scrollTop={scrollTop}
                 width={width}
               />
